@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.git/
+.gitignore
+qdrant_storage/
+data/
+*.bat
+*.md
+tests/
+eval/
+scripts/
+.streamlit/

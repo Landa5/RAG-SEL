@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧠 Admin — Router Dinámico V2.1</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --bg: #0f0f1a;
+            --surface: #1a1a2e;
+            --surface-2: #252540;
+            --border: #333355;
+            --text: #e8e8f0;
+            --text-muted: #8888aa;
+            --primary: #6c63ff;
+            --primary-glow: rgba(108, 99, 255, 0.3);
+            --success: #34d399;
+            --warning: #fbbf24;
+            --danger: #f87171;
+            --info: #60a5fa;
+            --gradient: linear-gradient(135deg, #6c63ff, #a855f7, #ec4899);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header h1 {
+            font-size: 20px;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header-actions { display: flex; gap: 10px; }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface-2);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 13px;
+            font-family: inherit;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn:hover { background: var(--primary); border-color: var(--primary); transform: translateY(-1px); }
+        .btn-primary { background: var(--primary); border-color: var(--primary); }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+        
+        .tabs {
+            display: flex;
+            gap: 0;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 32px;
+            overflow-x: auto;
+        }
+        
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .tab:hover { color: var(--text); }
+        .tab.active { color: var(--primary); border-color: var(--primary); }
+        
+        .content { padding: 24px 32px; max-width: 1400px; }
+        
+        .panel { display: none; }
+        .panel.active { display: block; }
+        
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+        }
+        
+        .card:hover { border-color: var(--primary); box-shadow: 0 0 20px var(--primary-glow); }
+        
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+        
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .stat-card .label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        
+        th {
+            text-align: left;
+            padding: 10px 12px;
+            background: var(--surface-2);
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+        }
+        
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(51,51,85,0.5);
+            vertical-align: top;
+        }
+        
+        tr:hover td { background: rgba(108,99,255,0.05); }
+        
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .badge-active { background: rgba(52,211,153,0.15); color: var(--success); }
+        .badge-disabled { background: rgba(248,113,113,0.15); color: var(--danger); }
+        .badge-preliminary { background: rgba(251,191,36,0.15); color: var(--warning); }
+        .badge-pipeline { background: rgba(96,165,250,0.15); color: var(--info); }
+        
+        .progress-bar {
+            height: 6px;
+            background: var(--surface-2);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        
+        .progress-bar .fill {
+            height: 100%;
+            border-radius: 3px;
+            background: var(--gradient);
+            transition: width 0.5s ease;
+        }
+        
+        .score-bar {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+        
+        .score-bar .bar {
+            width: 60px;
+            height: 4px;
+            background: var(--surface-2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .score-bar .bar .fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+        
+        .log-preview {
+            font-size: 12px;
+            color: var(--text-muted);
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .json-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--surface);
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow: auto;
+            z-index: 1000;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 999;
+        }
+        
+        pre {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 12px;
+            overflow-x: auto;
+            color: var(--text);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+        
+        .refresh-info {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        .loading-pulse { animation: pulse 1.5s infinite; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧠 Router Dinámico V2.1</h1>
+        <div class="header-actions">
+            <span class="refresh-info" id="lastRefresh"></span>
+            <button class="btn" onclick="refreshAll()">🔄 Refrescar</button>
+            <button class="btn" onclick="triggerSync()">📡 Sync Leaderboard</button>
+            <button class="btn" onclick="recalcMetrics()">📊 Recalcular Métricas</button>
+            <a href="/" class="btn">💬 Chat</a>
+        </div>
+    </div>
+    
+    <div class="tabs">
+        <div class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">📊 Dashboard</div>
+        <div class="tab" data-tab="models" onclick="switchTab('models')">🤖 Modelos</div>
+        <div class="tab" data-tab="pipelines" onclick="switchTab('pipelines')">🔧 Pipelines</div>
+        <div class="tab" data-tab="rules" onclick="switchTab('rules')">📏 Reglas</div>
+        <div class="tab" data-tab="logs" onclick="switchTab('logs')">📝 Logs</div>
+        <div class="tab" data-tab="predictions" onclick="switchTab('predictions')">🔮 Predicciones</div>
+    </div>
+    
+    <div class="content">
+        <!-- Dashboard -->
+        <div class="panel active" id="panel-dashboard">
+            <div class="stat-grid" id="dashboardStats">
+                <div class="stat-card"><div class="label">Modelos Activos</div><div class="value" id="s-models">-</div></div>
+                <div class="stat-card"><div class="label">Pipelines</div><div class="value" id="s-pipelines">-</div></div>
+                <div class="stat-card"><div class="label">Reglas</div><div class="value" id="s-rules">-</div></div>
+                <div class="stat-card"><div class="label">Routing Logs (24h)</div><div class="value" id="s-logs">-</div></div>
+                <div class="stat-card"><div class="label">Predicciones</div><div class="value" id="s-predictions">-</div></div>
+            </div>
+            
+            <h3 style="margin-bottom:12px">⏱️ Últimos Routings</h3>
+            <div class="card" style="overflow-x:auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Hora</th>
+                            <th>Query</th>
+                            <th>Tarea</th>
+                            <th>Pipeline</th>
+                            <th>Modelo</th>
+                            <th>Score</th>
+                            <th>Tokens</th>
+                            <th>Coste</th>
+                            <th>Latencia</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentLogs"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Modelos -->
+        <div class="panel" id="panel-models">
+            <div class="card-grid" id="modelCards"></div>
+        </div>
+        
+        <!-- Pipelines -->
+        <div class="panel" id="panel-pipelines">
+            <div class="card-grid" id="pipelineCards"></div>
+        </div>
+        
+        <!-- Reglas -->
+        <div class="panel" id="panel-rules">
+            <div class="card" style="overflow-x:auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Prioridad</th>
+                            <th>Nombre</th>
+                            <th>Task Family</th>
+                            <th>Pipeline</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rulesTable"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Logs -->
+        <div class="panel" id="panel-logs">
+            <div style="margin-bottom:12px; display:flex; gap:8px">
+                <select id="logFilter" class="btn" onchange="loadLogs()">
+                    <option value="">Todos los pipelines</option>
+                </select>
+                <button class="btn btn-sm" onclick="loadLogs()">Filtrar</button>
+            </div>
+            <div class="card" style="overflow-x:auto; max-height:70vh; overflow-y:auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Hora</th>
+                            <th>Query</th>
+                            <th>Tarea</th>
+                            <th>Pipeline</th>
+                            <th>Modelo</th>
+                            <th>Score</th>
+                            <th>In/Out</th>
+                            <th>Coste</th>
+                            <th>Latencia</th>
+                            <th>Fallback</th>
+                            <th>Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTable"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Predicciones -->
+        <div class="panel" id="panel-predictions">
+            <div class="card" style="overflow-x:auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Hora</th>
+                            <th>Query</th>
+                            <th>Método</th>
+                            <th>Variable</th>
+                            <th>Modelo</th>
+                            <th>Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody id="predictionsTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let cachedData = { models: [], pipelines: [], rules: [], logs: [], predictions: [] };
+        
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+            document.getElementById(`panel-${tab}`).classList.add('active');
+        }
+        
+        async function api(path) {
+            const res = await fetch(path);
+            return res.json();
+        }
+        
+        function formatTime(ts) {
+            if (!ts) return '-';
+            const d = new Date(ts);
+            return d.toLocaleString('es-ES', {hour:'2-digit', minute:'2-digit', second:'2-digit', day:'2-digit', month:'2-digit'});
+        }
+        
+        function formatCost(cost) {
+            if (!cost && cost !== 0) return '-';
+            return `$${cost.toFixed(6)}`;
+        }
+        
+        function arenaScoreCell(scores) {
+            if (!scores || typeof scores !== 'object') return '-';
+            const cats = Object.keys(scores);
+            return cats.map(c => `<span style="color:var(--text-muted)">${c}:</span> ${scores[c]}`).join('<br>');
+        }
+        
+        // ── Dashboard ──
+        async function loadDashboard() {
+            const [models, pipelines, rules, logs, preds] = await Promise.all([
+                api('/admin/api/routing/models'),
+                api('/admin/api/routing/pipelines'),
+                api('/admin/api/routing/rules'),
+                api('/admin/api/routing/logs?limit=10'),
+                api('/admin/api/routing/predictions?limit=5'),
+            ]);
+            
+            cachedData.models = models.models || [];
+            cachedData.pipelines = pipelines.pipelines || [];
+            cachedData.rules = rules.rules || [];
+            cachedData.logs = logs.logs || [];
+            cachedData.predictions = preds.predictions || [];
+            
+            const activeModels = cachedData.models.filter(m => m.status === 'active');
+            document.getElementById('s-models').textContent = activeModels.length + '/' + cachedData.models.length;
+            document.getElementById('s-pipelines').textContent = cachedData.pipelines.length;
+            document.getElementById('s-rules').textContent = cachedData.rules.length;
+            document.getElementById('s-logs').textContent = cachedData.logs.length;
+            document.getElementById('s-predictions').textContent = cachedData.predictions.length;
+            
+            // Recent logs table
+            const tbody = document.getElementById('recentLogs');
+            tbody.innerHTML = cachedData.logs.slice(0, 10).map(l => `<tr>
+                <td>${formatTime(l.created_at)}</td>
+                <td class="log-preview" title="${(l.query_preview||'').replace(/"/g,'&quot;')}">${l.query_preview || '-'}</td>
+                <td>${l.task_family || '-'}</td>
+                <td><span class="badge badge-pipeline">${l.pipeline_id || '-'}</span></td>
+                <td>${l.selected_model || '-'}</td>
+                <td>${l.composite_score ? l.composite_score.toFixed(3) : '-'}</td>
+                <td>${(l.tokens_input||0) + '/' + (l.tokens_output||0)}</td>
+                <td>${formatCost(l.cost_actual)}</td>
+                <td>${l.latency_ms ? l.latency_ms+'ms' : '-'}</td>
+            </tr>`).join('');
+            
+            // Pipeline filter
+            const sel = document.getElementById('logFilter');
+            const existing = new Set([...sel.options].map(o => o.value));
+            cachedData.pipelines.forEach(p => {
+                if (!existing.has(p.id)) {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = p.display_name;
+                    sel.appendChild(opt);
+                }
+            });
+        }
+        
+        // ── Models ──
+        function renderModels() {
+            const container = document.getElementById('modelCards');
+            container.innerHTML = cachedData.models.map(m => {
+                const statusBadge = m.status === 'active' ? 'badge-active' : 
+                                    m.status === 'preliminary' ? 'badge-preliminary' : 'badge-disabled';
+                const scores = typeof m.arena_scores === 'string' ? JSON.parse(m.arena_scores) : (m.arena_scores || {});
+                const ranks = typeof m.arena_ranks === 'string' ? JSON.parse(m.arena_ranks) : (m.arena_ranks || {});
+                
+                return `<div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:12px">
+                        <div>
+                            <div style="font-weight:600; font-size:15px">${m.display_name}</div>
+                            <div style="font-size:12px; color:var(--text-muted)">${m.model_id}</div>
+                        </div>
+                        <span class="badge ${statusBadge}">${m.status}</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px; margin-bottom:12px">
+                        <div><span style="color:var(--text-muted)">Provider:</span> ${m.provider}</div>
+                        <div><span style="color:var(--text-muted)">Context:</span> ${(m.context_window/1000).toFixed(0)}K</div>
+                        <div><span style="color:var(--text-muted)">$ Input:</span> $${m.price_input}/M</div>
+                        <div><span style="color:var(--text-muted)">$ Output:</span> $${m.price_output}/M</div>
+                        <div><span style="color:var(--text-muted)">Latencia:</span> ${m.avg_latency_ms ? m.avg_latency_ms+'ms' : 'N/A'}</div>
+                        <div><span style="color:var(--text-muted)">Success:</span> ${m.success_rate_7d ? (m.success_rate_7d*100).toFixed(1)+'%' : 'N/A'}</div>
+                        <div><span style="color:var(--text-muted)">Requests 7d:</span> ${m.total_requests_7d || 0}</div>
+                        <div><span style="color:var(--text-muted)">Feedback:</span> ${m.avg_feedback_score ? m.avg_feedback_score.toFixed(1)+'/5' : 'N/A'}</div>
+                    </div>
+                    <div style="font-size:11px; margin-bottom:8px; color:var(--text-muted)">Arena Scores:</div>
+                    <div style="font-size:12px">${arenaScoreCell(scores)}</div>
+                    <div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap">
+                        ${m.supports_tools ? '<span class="badge badge-pipeline">🔧 Tools</span>' : ''}
+                        ${m.supports_json ? '<span class="badge badge-pipeline">JSON</span>' : ''}
+                        ${m.supports_vision ? '<span class="badge badge-pipeline">👁️ Vision</span>' : ''}
+                        ${m.supports_streaming ? '<span class="badge badge-pipeline">📡 Stream</span>' : ''}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+        
+        // ── Pipelines ──
+        function renderPipelines() {
+            const container = document.getElementById('pipelineCards');
+            container.innerHTML = cachedData.pipelines.map(p => {
+                const weights = [
+                    {k:'Calidad', v:p.weight_quality, c:'#6c63ff'},
+                    {k:'Coste', v:p.weight_cost, c:'#34d399'},
+                    {k:'Latencia', v:p.weight_latency, c:'#fbbf24'},
+                    {k:'Fiabilidad', v:p.weight_reliability, c:'#60a5fa'},
+                    {k:'Feedback', v:p.weight_feedback, c:'#ec4899'},
+                ];
+                return `<div class="card">
+                    <div style="font-weight:600; font-size:15px; margin-bottom:4px">${p.display_name}</div>
+                    <div style="font-size:12px; color:var(--text-muted); margin-bottom:12px">${p.description || ''}</div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:12px; margin-bottom:12px">
+                        <div><span style="color:var(--text-muted)">Modo:</span> ${p.execution_mode}</div>
+                        <div><span style="color:var(--text-muted)">Arena cat:</span> ${p.arena_category || 'text'}</div>
+                        <div><span style="color:var(--text-muted)">Min context:</span> ${(p.min_context_window/1000).toFixed(0)}K</div>
+                        <div><span style="color:var(--text-muted)">Min score:</span> ${p.min_arena_score || 0}</div>
+                    </div>
+                    <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px">Pesos de scoring:</div>
+                    ${weights.map(w => `<div style="display:flex; align-items:center; gap:6px; margin-bottom:3px; font-size:12px">
+                        <span style="width:60px; color:var(--text-muted)">${w.k}</span>
+                        <div style="flex:1; height:6px; background:var(--surface-2); border-radius:3px; overflow:hidden">
+                            <div style="width:${w.v*100}%; height:100%; background:${w.c}; border-radius:3px"></div>
+                        </div>
+                        <span style="width:35px; text-align:right">${(w.v*100).toFixed(0)}%</span>
+                    </div>`).join('')}
+                    <div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap">
+                        ${p.requires_retrieval ? '<span class="badge badge-active">📚 RAG</span>' : ''}
+                        ${p.requires_sql ? '<span class="badge badge-active">🗄️ SQL</span>' : ''}
+                        ${p.requires_forecasting_engine ? '<span class="badge badge-active">🔮 Forecast</span>' : ''}
+                        ${p.requires_tools ? '<span class="badge badge-active">🔧 Tools</span>' : ''}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+        
+        // ── Rules ──
+        function renderRules() {
+            const tbody = document.getElementById('rulesTable');
+            tbody.innerHTML = cachedData.rules.map(r => `<tr>
+                <td style="font-weight:600; color:var(--primary)">${r.priority}</td>
+                <td>${r.name}</td>
+                <td><code>${r.task_family}</code></td>
+                <td><span class="badge badge-pipeline">${r.pipeline_id}</span></td>
+                <td>${r.enabled ? '<span class="badge badge-active">Activa</span>' : '<span class="badge badge-disabled">Inactiva</span>'}</td>
+            </tr>`).join('');
+        }
+        
+        // ── Logs ──
+        async function loadLogs() {
+            const pipeline = document.getElementById('logFilter').value;
+            const url = `/admin/api/routing/logs?limit=100${pipeline ? '&pipeline='+pipeline : ''}`;
+            const data = await api(url);
+            const logs = data.logs || [];
+            
+            const tbody = document.getElementById('logsTable');
+            tbody.innerHTML = logs.map(l => `<tr>
+                <td>${formatTime(l.created_at)}</td>
+                <td class="log-preview" title="${(l.query_preview||'').replace(/"/g,'&quot;')}">${l.query_preview || '-'}</td>
+                <td>${l.task_family || '-'}</td>
+                <td><span class="badge badge-pipeline">${l.pipeline_id || '-'}</span></td>
+                <td style="font-size:12px">${l.selected_model || '-'}</td>
+                <td>${l.composite_score ? l.composite_score.toFixed(3) : '-'}</td>
+                <td style="font-size:12px">${(l.tokens_input||0)}/${(l.tokens_output||0)}</td>
+                <td>${formatCost(l.cost_actual)}</td>
+                <td>${l.latency_ms ? l.latency_ms+'ms' : '-'}</td>
+                <td>${l.fallback_triggered ? '<span class="badge badge-warning">⚡'+
+                    (l.fallback_model_used||'')+'</span>' : '-'}</td>
+                <td><button class="btn btn-sm" onclick='showDetail(${JSON.stringify(l).replace(/'/g,"&#39;")})'>🔍</button></td>
+            </tr>`).join('');
+        }
+        
+        // ── Predictions ──
+        async function loadPredictions() {
+            const data = await api('/admin/api/routing/predictions?limit=50');
+            const preds = data.predictions || [];
+            const tbody = document.getElementById('predictionsTable');
+            tbody.innerHTML = preds.map(p => `<tr>
+                <td>${formatTime(p.created_at)}</td>
+                <td class="log-preview">${p.query_preview || '-'}</td>
+                <td>${p.method || '-'}</td>
+                <td>${p.target_variable || '-'}</td>
+                <td style="font-size:12px">${p.selected_model || '-'}</td>
+                <td><button class="btn btn-sm" onclick='showDetail(${JSON.stringify(p).replace(/'/g,"&#39;")})'>🔍</button></td>
+            </tr>`).join('');
+        }
+        
+        // ── Detail popup ──
+        function showDetail(obj) {
+            const overlay = document.createElement('div');
+            overlay.className = 'overlay';
+            overlay.onclick = () => { overlay.remove(); popup.remove(); };
+            document.body.appendChild(overlay);
+            
+            const popup = document.createElement('div');
+            popup.className = 'json-popup';
+            popup.innerHTML = `
+                <div style="display:flex; justify-content:space-between; margin-bottom:12px">
+                    <h3>Detalle</h3>
+                    <button class="btn btn-sm" onclick="this.parentElement.parentElement.remove(); document.querySelector('.overlay').remove()">✕</button>
+                </div>
+                <pre>${JSON.stringify(obj, null, 2)}</pre>
+            `;
+            document.body.appendChild(popup);
+        }
+        
+        // ── Sync ──
+        async function triggerSync() {
+            const btn = event.target;
+            btn.textContent = '⏳ Sincronizando...';
+            btn.disabled = true;
+            try {
+                const res = await fetch('/admin/api/routing/sync', {method:'POST'});
+                const data = await res.json();
+                alert(data.status === 'ok' ? '✅ Sync completado' : '❌ Error: ' + data.error);
+                refreshAll();
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
+            btn.textContent = '📡 Sync Leaderboard';
+            btn.disabled = false;
+        }
+        
+        async function recalcMetrics() {
+            const btn = event.target;
+            btn.textContent = '⏳ Recalculando...';
+            btn.disabled = true;
+            try {
+                const res = await fetch('/admin/api/routing/recalculate-metrics', {method:'POST'});
+                const data = await res.json();
+                alert(data.status === 'ok' ? '✅ Métricas recalculadas' : '❌ Error: ' + data.error);
+                refreshAll();
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
+            btn.textContent = '📊 Recalcular Métricas';
+            btn.disabled = false;
+        }
+        
+        // ── Init ──
+        async function refreshAll() {
+            await loadDashboard();
+            renderModels();
+            renderPipelines();
+            renderRules();
+            loadLogs();
+            loadPredictions();
+            document.getElementById('lastRefresh').textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es-ES');
+        }
+        
+        refreshAll();
+        setInterval(refreshAll, 60000);
+    </script>
+</body>
+</html>

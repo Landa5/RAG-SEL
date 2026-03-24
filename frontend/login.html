@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG-SEL — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app/static/css/admin.css">
+</head>
+<body>
+<div class="login-page">
+  <div class="login-card">
+    <div class="logo">
+      <h1>🧠 RAG-SEL</h1>
+      <p>Panel de Administración</p>
+    </div>
+    <form id="loginForm" onsubmit="return handleLogin(event)">
+      <div class="form-group">
+        <label for="username">Usuario</label>
+        <input type="text" id="username" class="form-input" placeholder="admin" required autofocus>
+      </div>
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+      </div>
+      <div id="loginError" style="color:var(--danger);font-size:0.8rem;margin-bottom:12px;display:none"></div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px" id="loginBtn">
+        Iniciar sesión
+      </button>
+    </form>
+  </div>
+</div>
+<script>
+async function handleLogin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('loginError');
+  btn.disabled = true; btn.textContent = 'Verificando...';
+  err.style.display = 'none';
+  try {
+    const res = await fetch('/app/auth/login', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        username: document.getElementById('username').value,
+        password: document.getElementById('password').value,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      err.textContent = data.detail || 'Error de autenticación';
+      err.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Iniciar sesión';
+      return;
+    }
+    window.location.href = '/app/';
+  } catch(ex) {
+    err.textContent = 'Error de conexión';
+    err.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Iniciar sesión';
+  }
+}
+</script>
+</body>
+</html>

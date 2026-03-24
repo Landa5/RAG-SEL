@@ -1,0 +1,26 @@
+# render.yaml — Configuración de despliegue en Render.com
+services:
+  - type: web
+    name: rag-sel
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: QDRANT_URL
+        sync: false
+      - key: QDRANT_API_KEY
+        sync: false
+      - key: RAGSEL_FERNET_KEY
+        sync: false
+      - key: RAGSEL_ENV
+        value: production
+      - key: COLLECTION_NAME
+        value: rag_sel_docs
+      - key: LLM_PROVIDER
+        value: gemini

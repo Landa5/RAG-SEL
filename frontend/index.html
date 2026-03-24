@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG-SEL — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app/static/css/admin.css">
+</head>
+<body>
+<div class="app-layout" id="appRoot">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="icon">🧠</span>
+      <div><h2>RAG-SEL</h2><small>Panel de Administración</small></div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+    <div class="sidebar-footer" id="sidebarFooter"></div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main-content">
+    <header class="app-header" id="appHeader">
+      <span class="page-title" id="pageTitle">Dashboard</span>
+      <span class="breadcrumb" id="breadcrumb">Inicio</span>
+      <div class="tenant-selector hidden" id="tenantSelector">
+        <label>Tenant:</label>
+        <select id="tenantSelect"><option value="">Todos</option></select>
+      </div>
+    </header>
+    <main class="page-container" id="pageContent">
+      <div class="loading-state"><div class="spinner"></div><p>Cargando...</p></div>
+    </main>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="/app/static/js/api.js"></script>
+<script src="/app/static/js/components.js"></script>
+<script src="/app/static/js/app.js"></script>
+<script src="/app/static/js/pages/dashboard.js"></script>
+<script src="/app/static/js/pages/chat.js"></script>
+<script src="/app/static/js/pages/documents.js"></script>
+<script src="/app/static/js/pages/executions.js"></script>
+<script src="/app/static/js/pages/reviews.js"></script>
+<script src="/app/static/js/pages/predictions.js"></script>
+<script src="/app/static/js/pages/providers.js"></script>
+<script src="/app/static/js/pages/models.js"></script>
+<script src="/app/static/js/pages/routing.js"></script>
+<script src="/app/static/js/pages/pipelines.js"></script>
+<script src="/app/static/js/pages/tenants.js"></script>
+<script src="/app/static/js/pages/apps.js"></script>
+<script src="/app/static/js/pages/credentials.js"></script>
+<script src="/app/static/js/pages/scopes.js"></script>
+<script src="/app/static/js/pages/usage.js"></script>
+<script src="/app/static/js/pages/alerts.js"></script>
+<script src="/app/static/js/pages/health.js"></script>
+</body>
+</html>
