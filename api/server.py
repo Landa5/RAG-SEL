@@ -16,9 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional
 
-from llm.generate import generate_answer_stream
 from db import model_db as mdb
-from llm.leaderboard_sync import start_sync_scheduler, sync_leaderboard
 
 # API v1 multi-tenant
 from api.api_v1 import router as api_v1_router
@@ -112,9 +110,13 @@ async def startup_event():
     """Precarga caché y arranca scheduler de leaderboard."""
     try:
         mdb.preload_cache()
+    except Exception as e:
+        print(f"Warning: Error precargando caché: {e}")
+    try:
+        from llm.leaderboard_sync import start_sync_scheduler
         start_sync_scheduler()
     except Exception as e:
-        print(f"Warning: Error en startup rag_engine: {e}")
+        print(f"Warning: Error arrancando scheduler: {e}")
 
 
 @app.get("/health")
@@ -157,6 +159,7 @@ async def chat_stream_endpoint(req: QueryRequest):
 
     def event_generator():
         try:
+            from llm.generate import generate_answer_stream
             for chunk in generate_answer_stream(
                 req.question,
                 req.chat_history or [],
