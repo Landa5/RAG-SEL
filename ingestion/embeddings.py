@@ -1,18 +1,27 @@
 """
 ingestion/embeddings.py — Embeddings locales con sentence-transformers
 Gratuito, sin API key, compatible con Python 3.14
-Modelo: all-MiniLM-L6-v2 (384 dims, rápido y preciso para español/inglés)
+Modelo: paraphrase-multilingual-MiniLM-L12-v2 (384 dims, rápido y preciso para español/inglés)
+
+NOTA: sentence-transformers + PyTorch son pesados (~800MB RAM).
+En entornos con RAM limitada (Render free), se cargan bajo demanda.
 """
-from sentence_transformers import SentenceTransformer
 
 _model = None
 MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
 
 
-def get_embedding_model() -> SentenceTransformer:
+def get_embedding_model():
     """Carga el modelo una sola vez (singleton). Primera vez descarga ~90MB."""
     global _model
     if _model is None:
+        try:
+            from sentence_transformers import SentenceTransformer
+        except ImportError:
+            raise RuntimeError(
+                "sentence-transformers no está instalado. "
+                "Instálalo con: pip install sentence-transformers"
+            )
         print(f"⏳ Cargando modelo de embeddings '{MODEL_NAME}'...")
         _model = SentenceTransformer(MODEL_NAME)
         print("✅ Modelo cargado correctamente")
