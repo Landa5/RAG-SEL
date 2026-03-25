@@ -119,49 +119,83 @@ def _update_routing_log(log_id, tokens_in, tokens_out, model_info,
 # Esquema de BD para el system prompt
 # ─────────────────────────────────────────────
 
-DB_SCHEMA = """
-TABLAS PRINCIPALES (PostgreSQL, nombres entre comillas dobles):
+DB_SCHEMA_SEL = """
+=== ESQUEMA SEL (Control Horario / Logística) ===
+TABLAS (PostgreSQL, nombres entre comillas dobles):
 
 "Empleado": id, usuario, activo(bool), nombre, apellidos, dni, telefono, email, direccion, rol(enum: ADMIN/CONDUCTOR/MECANICO/RRHH), puestoTrabajo, horaEntradaPrevista, horaSalidaPrevista, diasVacaciones, diasExtras, horasExtra, fechaAlta, fechaBaja
-
-"JornadaLaboral": id, fecha, horaEntrada, horaSalida, totalHoras(float), estado(enum: TRABAJANDO/COMPLETADA/INCIDENCIA), observaciones, empleadoId → Empleado
-
-"UsoCamion": id, jornadaId → JornadaLaboral, camionId → Camion, horaInicio, horaFin, kmInicial(int), kmFinal(int), kmRecorridos(int), descargasCount(int), viajesCount(int), litrosRepostados(float), notas
-
-"Camion": id, matricula, modelo, marca, kmActual(int), itvVencimiento, seguroVencimiento, tacografoVencimiento, adrVencimiento, activo(bool)
-
-"MantenimientoRealizado": id, camionId → Camion, fecha, taller, kmEnEseMomento(int), descripcion, piezasCambiadas, costo(float), tipo(enum), proximoKmPrevisto
-
+"JornadaLaboral": id, fecha, horaEntrada, horaSalida, totalHoras(float), estado, observaciones, empleadoId → Empleado
+"UsoCamion": id, jornadaId → JornadaLaboral, camionId → Camion, horaInicio, horaFin, kmInicial, kmFinal, kmRecorridos, descargasCount, viajesCount, litrosRepostados(float), notas
+"Camion": id, matricula, modelo, marca, kmActual, itvVencimiento, seguroVencimiento, tacografoVencimiento, adrVencimiento, activo(bool)
+"MantenimientoRealizado": id, camionId → Camion, fecha, taller, kmEnEseMomento, descripcion, piezasCambiadas, costo(float), tipo, proximoKmPrevisto
 "MantenimientoProximo": id, camionId → Camion, tipoMantenimiento, kmObjetivo, fechaObjetivo, estado
-
-"Ausencia": id, tipo(enum: VACACIONES/BAJA_MEDICA/PERMISO/OTROS), fechaInicio, fechaFin, estado(enum: PENDIENTE/APROBADA/RECHAZADA), observaciones, horas, empleadoId → Empleado
-
+"Ausencia": id, tipo(enum: VACACIONES/BAJA_MEDICA/PERMISO/OTROS), fechaInicio, fechaFin, estado, observaciones, horas, empleadoId → Empleado
 "NominaMes": id, empleadoId → Empleado, year, month, estado, totalBruto(float), totalVariables(float)
 "NominaLinea": id, nominaId → NominaMes, conceptoNombre, cantidad, rate, importe, orden
-
-"Tarea": id, tipo(enum), estado(enum: BACKLOG/PENDIENTE/EN_CURSO/COMPLETADA/CANCELADA), prioridad(enum: BAJA/MEDIA/ALTA/URGENTE), matricula, titulo, descripcion, fechaLimite, fechaInicio, fechaCierre, resumenCierre, creadoPorId → Empleado, asignadoAId → Empleado, camionId → Camion, descargas, proyectoId, privada(bool)
-
+"Tarea": id, tipo, estado, prioridad, matricula, titulo, descripcion, fechaLimite, fechaInicio, fechaCierre, resumenCierre, creadoPorId → Empleado, asignadoAId → Empleado, camionId → Camion, descargas, proyectoId, privada(bool)
 "TareaHistorial": id, tareaId → Tarea, autorId → Empleado, tipoAccion, mensaje, estadoNuevo, createdAt
-
-"Descarga": id, hora, litros(int), tipoGasoil(text: A/B/C), lugar(text), usoCamionId → UsoCamion
-NOTA: Para contar descargas por conductor/día, usa UsoCamion.descargasCount (ya tiene el total por jornada). La tabla Descarga tiene el detalle individual.
-
+"Descarga": id, hora, litros, tipoGasoil, lugar, usoCamionId → UsoCamion
 "Documento": id, nombre, tipo, url, camionId → Camion, empleadoId → Empleado, createdAt
-
-"RevisionAccesorios": id, camionId → Camion, empleadoId → Empleado, mes, instruccionesEscritas(bool), linternaPetroval(bool), gafasSeguridad(bool), chaleco(bool), calzo(bool), guantes(bool), triangulos(bool), pala(bool), observaciones
-
-"Proyecto": id, nombre, descripcion, activo(bool), estado(enum)
-
+"RevisionAccesorios": id, camionId → Camion, empleadoId → Empleado, mes, instruccionesEscritas(bool), guantes(bool), triangulos(bool), observaciones
+"Proyecto": id, nombre, descripcion, activo(bool), estado
 "TachographDailySummary": id, driverId → TachographDriver, vehicleId, date, totalDrivingMinutes, totalOtherWorkMinutes, totalRestMinutes, totalBreakMinutes
 "TachographDriver": id, linkedEmployeeId → Empleado, fullName, cardNumber, active(bool)
 "TachographVehicle": id, linkedVehicleId → Camion, plateNumber, vin, active(bool)
 
-RELACIONES CLAVE:
-- UsoCamion.jornadaId → JornadaLaboral.id → JornadaLaboral.empleadoId → Empleado.id (para saber qué conductor usó qué camión)
-- Descarga.usoCamionId → UsoCamion.id (descargas de producto por viaje)
-- MantenimientoRealizado.camionId → Camion.id
-- TachographDriver.linkedEmployeeId → Empleado.id
+RELACIONES CLAVE SEL:
+- UsoCamion.jornadaId → JornadaLaboral → Empleado (conductor → camión)
+- Descarga.usoCamionId → UsoCamion
+- MantenimientoRealizado.camionId → Camion
+- TachographDriver.linkedEmployeeId → Empleado
 """
+
+DB_SCHEMA_CROMOS = """
+=== ESQUEMA APP CROMOS (Gestión de cromos/cards coleccionables) ===
+TABLAS (PostgreSQL, nombres entre comillas dobles):
+
+"Card": id, player(text), year(text), year_season(text), collection(text), collection_number(text), card_number(text), description(text), publisher(text), variant(text), print_run(text), owner(text), state(text: IN_INVENTORY/GRADING/SOLD/OTHER), alias_visible(text), certificate_type(text), certificate_number(text), grade(text), notes(text), "createdAt", "updatedAt", "deletedAt"
+
+"Purchase": id, "cardId" → Card, date(text), source(text), payer(text), units(int), unit_price(float), shipping(float), taxes(float), total_price(float), currency(text), exchange_rate(float), notes(text), economic_owner(text), recorded_by(text), import_key(text), year_season(text), box(text), source_sheet(text), source_row(int), "deletedAt", "createdAt", "updatedAt"
+
+"Sale": id, "cardId" → Card, date(text), platform(text), buyer(text), sale_price(float), sale_plus_shipping(float), commission(float), shipping_cost(float), net_profit(float), total_amount(float), shipping_charged(float), currency(text), units(int), notes(text), economic_owner(text), cash_receiver(text), recorded_by(text), import_key(text), season(text), certificate(text), "deletedAt", "createdAt", "updatedAt"
+
+"InventoryUnit": id, "cardId" → Card, "purchaseId" → Purchase, unit_index(int), state(text: RAW/GRADING/GRADED/FOR_SALE/SOLD/RESERVED), box_id(int), sale_id(int), certificate_number(text), grade(text), grading_cost(float), verified(int), notes(text), economic_owner(text), cost_base(float), cost_extra(float), "createdAt", "updatedAt"
+
+"GradingSubmission": id, "submissionId"(text), service(text: PSA/BGS/SGC), status(text: DRAFT/SENT/IN_PROCESS/RECEIVED), date_created(text), date_sent(text), date_received(text), shipping_cost(float), grading_cost(float), total_cards(int), notes(text), "createdAt", "updatedAt"
+"GradingItem": id, "submissionId" → GradingSubmission, "cardId" → Card, cert_number(text), grade(text), cost_per_card(float), notes(text), "createdAt"
+
+"CostAllocationEvent": id, date(text), type(text), description(text), total_amount(float), allocation_method(text), source_reference(text), notes(text), payer(text), economic_owner(text), "createdAt"
+"CostAllocationItem": id, event_id → CostAllocationEvent, "cardId" → Card, "purchaseId" → Purchase, allocated_amount(float), declared_value(float), affected_units(int), manual_amount(float), notes(text), comment(text)
+
+"FinancialTransaction": id, date(timestamptz), direction(text: OUTFLOW/INFLOW/TRANSFER/ADJUSTMENT), category(text), amount(float), currency(text), exchange_rate(float), amount_eur(float), recorded_by(text), payer(text), economic_owner(text), cash_receiver(text), description(text), notes(text), source_entity_type(text), source_entity_id(int), purchase_lot_id(int), inventory_unit_id(int), sale_id(int), "createdAt"
+"PartnerTransaction": id, date(timestamptz), from_partner(text), to_partner(text), amount(float), type(text: LOAN/REPAYMENT/COMPENSATION/ADJUSTMENT/SETTLEMENT), description(text), financial_tx_id → FinancialTransaction, "createdAt"
+
+"Box": id, name(text), location(text), description(text), "createdAt"
+"BoxMovement": id, unit_id → InventoryUnit, from_box_id(int), to_box_id(int), moved_by(text), reason(text), "createdAt"
+"SaleItem": id, sale_id → Sale, inventory_unit_id → InventoryUnit, sale_price(float), allocated_shipping(float), allocated_commission(float), economic_owner(text), "createdAt"
+"Expense": id, date(text), category(text), description(text), amount(float), payer(text), notes(text), "deletedAt", "createdAt"
+"GeneralExpense": id, date(text), concept(text), units(int), amount(float), notes(text), "createdAt"
+"User": id, name(text), email(text), password(text), role(text: ADMIN/OPERATOR), "createdAt"
+"CardAttachment": id, card_id → Card, file_name(text), file_url(text), file_type(text), file_size(int), uploaded_by(text), "createdAt"
+
+RELACIONES CLAVE CROMOS:
+- InventoryUnit."cardId" → Card (cada unidad pertenece a un cromo)
+- InventoryUnit."purchaseId" → Purchase (cada unidad viene de una compra)
+- Purchase."cardId" → Card (compra de un cromo)
+- Sale."cardId" → Card (venta de un cromo)
+- GradingItem."cardId" → Card, GradingItem."submissionId" → GradingSubmission
+- SaleItem.inventory_unit_id → InventoryUnit (qué unidad se vendió)
+- CostAllocationItem.event_id → CostAllocationEvent (gastos imputados)
+
+CONSULTAS ÚTILES CROMOS:
+- Total inversión: SELECT SUM(total_price) FROM "Purchase" WHERE "deletedAt" IS NULL
+- Cromos en inventario: SELECT COUNT(*) FROM "Card" WHERE state = 'IN_INVENTORY' AND "deletedAt" IS NULL
+- Unidades por estado: SELECT state, COUNT(*) FROM "InventoryUnit" GROUP BY state
+- Jugador más comprado: SELECT c.player, COUNT(*) FROM "Card" c JOIN "Purchase" p ON p."cardId" = c.id GROUP BY c.player ORDER BY COUNT(*) DESC
+"""
+
+# Schema combinado para el prompt
+DB_SCHEMA = DB_SCHEMA_SEL + "\n" + DB_SCHEMA_CROMOS
 
 
 def get_system_prompt() -> str:
@@ -175,7 +209,10 @@ def get_system_prompt() -> str:
     rango_semana = f"{lunes.strftime('%Y-%m-%d')} al {domingo.strftime('%Y-%m-%d')}"
     fecha_iso = now.strftime("%Y-%m-%d")
 
-    return f"""Eres el asistente inteligente de la empresa SEL (Servicios y Entregas Logísticas).
+    return f"""Eres un asistente inteligente multi-tenant. Según la app conectada, puedes gestionar datos de:
+- SEL (Servicios y Entregas Logísticas): empleados, jornadas, camiones, nóminas, ausencias, tacógrafo.
+- App Cromos: inventario de cromos/cards coleccionables, compras, ventas, grading PSA/BGS, costes, cajas.
+
 Tienes acceso a dos herramientas: una para consultar la base de datos SQL y otra para buscar en documentos PDF.
 
 FECHA ACTUAL: Hoy es {dia_semana} {fecha_hoy}. Fecha ISO: {fecha_iso}. Semana actual: {rango_semana}.
@@ -184,10 +221,11 @@ ESQUEMA DE LA BASE DE DATOS:
 {DB_SCHEMA}
 
 REGLAS SQL:
-- Usa SIEMPRE comillas dobles para nombres de tabla y columnas con mayúsculas: "Empleado", "kmRecorridos", etc.
+- Usa SIEMPRE comillas dobles para nombres de tabla y columnas con mayúsculas: "Card", "cardId", "Empleado", "kmRecorridos", etc.
 - Usa JOINs para combinar tablas relacionadas.
-- Cuando pregunten por "esta semana", filtra: WHERE fecha >= '{lunes.strftime('%Y-%m-%d')}' AND fecha <= '{domingo.strftime('%Y-%m-%d')}'
-- Cuando pregunten por "hoy", filtra: WHERE fecha::date = '{fecha_iso}'
+- Para App Cromos: filtra siempre WHERE "deletedAt" IS NULL para excluir registros eliminados.
+- Para SEL: Cuando pregunten por "esta semana", filtra: WHERE fecha >= '{lunes.strftime('%Y-%m-%d')}' AND fecha <= '{domingo.strftime('%Y-%m-%d')}'
+- Para SEL: Cuando pregunten por "hoy", filtra: WHERE fecha::date = '{fecha_iso}'
 - Añade ORDER BY y LIMIT para consultas grandes.
 - Puedes hacer múltiples consultas si necesitas datos de diferentes tablas.
 
@@ -198,8 +236,12 @@ COMPORTAMIENTO OBLIGATORIO:
 - Si una consulta SQL falla, intenta corregirla y volver a ejecutar.
 
 CUÁNDO USAR CADA HERRAMIENTA:
-- 'ejecutar_consulta_sql' → TODO lo relacionado con empleados, jornadas, camiones, km, reparaciones, tareas, nóminas, ausencias, descargas, tacógrafo.
+- 'ejecutar_consulta_sql' → datos de empleados, jornadas, camiones, nóminas, ausencias, tacógrafo, Y TAMBIÉN cromos, inventario, compras, ventas, grading, costes.
 - 'buscar_documentos_pdf' → facturas, normativas, convenios colectivos, albaranes, documentos escaneados.
+
+DETECCIÓN DE DOMINIO:
+- Si la pregunta menciona cromos, cards, jugadores, colecciones, PSA, grading, inventario de cromos → usa tablas del esquema CROMOS.
+- Si la pregunta menciona empleados, conductores, camiones, jornadas, nóminas → usa tablas del esquema SEL.
 
 FORMATO DE RESPUESTA:
 - Sé conciso y directo. Usa listas o tablas cuando haya muchos datos.
@@ -238,11 +280,20 @@ def _format_sql_results(rows: list[dict]) -> str:
 # ─────────────────────────────────────────────
 
 _ALLOWED_TABLES = {
+    # SEL tables
     'Empleado', 'JornadaLaboral', 'UsoCamion', 'Camion',
     'MantenimientoRealizado', 'MantenimientoProximo', 'Ausencia',
     'NominaMes', 'NominaLinea', 'Tarea', 'TareaHistorial',
     'Descarga', 'Documento', 'RevisionAccesorios', 'Proyecto',
     'TachographDailySummary', 'TachographDriver', 'TachographVehicle',
+    # App Cromos tables
+    'Card', 'Purchase', 'Sale', 'InventoryUnit',
+    'GradingSubmission', 'GradingItem',
+    'CostAllocationEvent', 'CostAllocationItem',
+    'FinancialTransaction', 'PartnerTransaction',
+    'Box', 'BoxMovement', 'SaleItem',
+    'Expense', 'GeneralExpense', 'User', 'CardAttachment',
+    'AuditLog', 'MigrationIssue', 'FinancialIssue', 'CashAccount',
 }
 
 _DANGEROUS_KEYWORDS = [

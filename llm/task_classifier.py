@@ -113,12 +113,26 @@ _KEYWORDS = {
 
 # Keywords que indican necesidad de SQL
 _SQL_KEYWORDS = [
+    # SEL domain
     "empleado", "empleados", "conductor", "conductores", "jornada", "jornadas",
     "horas", "kilómetros", "km", "descarga", "descargas", "litros",
     "camión", "camiones", "flota", "matrícula", "itv", "seguro",
     "tacógrafo", "vehículo", "nómina", "ausencia", "vacaciones",
     "tarea", "tareas", "avería", "mantenimiento", "gasóleo", "gasoil",
     "gasto", "coste", "gasoil",
+    # App Cromos domain
+    "cromo", "cromos", "card", "cards", "carta", "cartas",
+    "inventario", "stock", "unidades",
+    "compra", "compras", "purchase", "purchases",
+    "venta", "ventas", "sale", "sales",
+    "grading", "psa", "bgs", "sgc", "certificado", "certificación",
+    "colección", "colecciones", "collection",
+    "jugador", "jugadores", "player",
+    "publisher", "editorial", "topps", "panini", "upper deck",
+    "caja", "cajas", "box", "boxes",
+    "inversión", "beneficio", "margen", "rentabilidad", "precio",
+    "envío", "envíos", "submission",
+    "propietario", "pagador", "owner", "payer",
 ]
 
 # Keywords que indican necesidad de RAG documental
