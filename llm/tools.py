@@ -8,13 +8,13 @@ GEMINI_TOOLS = [
         "functionDeclarations": [
             {
                 "name": "ejecutar_consulta_sql",
-                "description": "Ejecuta una consulta SQL SELECT de solo lectura en la base de datos PostgreSQL de la empresa. Usa el ESQUEMA DE BD proporcionado en las instrucciones del sistema para construir consultas correctas. Solo se permiten SELECT. Los nombres de tabla y columna van entre comillas dobles (ej: \"Empleado\", \"kmRecorridos\").",
+                "description": "Ejecuta una consulta SQL SELECT de solo lectura en la base de datos PostgreSQL. Usa el ESQUEMA DE BD proporcionado en las instrucciones del sistema para construir consultas correctas. Solo se permiten SELECT. Los nombres de tabla y columna van entre comillas dobles (ej: \"Empleado\", \"Card\", \"Purchase\", \"InventoryUnit\"). DEBES usar esta herramienta siempre que necesites datos reales de la base de datos.",
                 "parameters": {
                     "type": "OBJECT",
                     "properties": {
                         "sql": {
                             "type": "STRING",
-                            "description": "Consulta SQL SELECT a ejecutar. Los nombres de tabla van entre comillas dobles. Ejemplo: SELECT e.nombre, SUM(u.\"kmRecorridos\") FROM \"UsoCamion\" u JOIN \"Camion\" c ON c.id = u.\"camionId\" JOIN \"JornadaLaboral\" j ON j.id = u.\"jornadaId\" JOIN \"Empleado\" e ON e.id = j.\"empleadoId\" GROUP BY e.nombre"
+                            "description": "Consulta SQL SELECT a ejecutar. Los nombres de tabla van entre comillas dobles. Ejemplos SEL: SELECT e.nombre, SUM(u.\"kmRecorridos\") FROM \"UsoCamion\" u JOIN \"JornadaLaboral\" j ON j.id = u.\"jornadaId\" JOIN \"Empleado\" e ON e.id = j.\"empleadoId\" GROUP BY e.nombre. Ejemplos CROMOS: SELECT COUNT(*) FROM \"Card\" WHERE \"deletedAt\" IS NULL; SELECT c.player, COUNT(*) FROM \"Card\" c JOIN \"Purchase\" p ON p.\"cardId\" = c.id GROUP BY c.player ORDER BY COUNT(*) DESC; SELECT state, COUNT(*) FROM \"InventoryUnit\" GROUP BY state"
                         },
                         "descripcion": {
                             "type": "STRING",
@@ -45,3 +45,4 @@ GEMINI_TOOLS = [
         ]
     }
 ]
+

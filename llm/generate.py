@@ -599,6 +599,12 @@ def generate_answer_stream(query: str, chat_history: list = None,
     # Solo dar tools al LLM si el pipeline lo requiere
     if needs_tools:
         payload["tools"] = GEMINI_TOOLS
+        # Forzar al LLM a usar al menos una herramienta en la primera respuesta
+        payload["tool_config"] = {
+            "function_calling_config": {
+                "mode": "ANY"
+            }
+        }
 
     total_tokens_in = 0
     total_tokens_out = 0
