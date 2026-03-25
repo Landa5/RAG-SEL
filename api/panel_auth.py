@@ -60,7 +60,11 @@ async def require_superadmin(admin: dict = Depends(get_current_admin)) -> dict:
 @router.post("/login")
 async def login(req: LoginRequest, request: Request, response: Response):
     """Login humano con usuario y contraseña."""
-    user = adb.authenticate_admin(req.username, req.password)
+    try:
+        user = adb.authenticate_admin(req.username, req.password)
+    except Exception as e:
+        print(f"❌ Login error: {type(e).__name__}: {e}")
+        raise HTTPException(status_code=500, detail=f"Error de base de datos: {type(e).__name__}")
     if not user:
         raise HTTPException(status_code=401, detail="Credenciales incorrectas")
 
