@@ -1,26 +1,43 @@
 # syntax=docker/dockerfile:1
-FROM python:3.11-slim
 
-# Dependencias del sistema para psycopg2 y cryptography
+# ── Stage 1: Build (instalar deps pesadas) ──
+FROM python:3.11-slim AS builder
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc libpq-dev && \
     rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+WORKDIR /build
 
-# Instalar dependencias Python
+# Instalar PyTorch CPU-only PRIMERO (mucho más ligero que la versión GPU)
+RUN pip install --no-cache-dir \
+    torch --index-url https://download.pytorch.org/whl/cpu
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# ── Stage 2: Runtime (imagen mínima) ──
+FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copiar paquetes Python del builder
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copiar código
 COPY . .
 
-# Puerto (Render asigna PORT dinámico)
+# Puerto (Railway asigna PORT dinámico)
 EXPOSE 8000
 
 # Healthcheck
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:${PORT:-8000}/health')" || exit 1
 
-# Arrancar con puerto dinámico
+# Arrancar
 CMD uvicorn api.server:app --host 0.0.0.0 --port ${PORT:-8000}
