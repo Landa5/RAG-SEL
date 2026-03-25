@@ -514,7 +514,10 @@ def generate_answer_stream(query: str, chat_history: list = None,
     # ═══ PASO 2: Status de pre-ejecución ═══
     if orch.execution_log.forecast_engine_executed:
         fr = orch.structured_result
-        yield f"data: {json.dumps({'status': f'📊 Predicción: {fr.prediction:.2f} ({fr.confidence:.0%} confianza)'}, ensure_ascii=False)}\n\n"
+        if hasattr(fr, 'prediction'):
+            yield f"data: {json.dumps({'status': f'📊 Predicción: {fr.prediction:.2f} ({fr.confidence:.0%} confianza)'}, ensure_ascii=False)}\n\n"
+        else:
+            yield f"data: {json.dumps({'status': '📊 Análisis descriptivo (datos insuficientes para predicción cuantitativa)'}, ensure_ascii=False)}\n\n"
     elif orch.execution_log.degraded_from:
         yield f"data: {json.dumps({'status': f'⚠️ Degradado de {orch.execution_log.degraded_from} a {orch.pipeline_executed}'}, ensure_ascii=False)}\n\n"
     elif orch.execution_log.retrieval_executed:
