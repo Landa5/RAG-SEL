@@ -104,8 +104,8 @@ async def authenticate(
     if cred.get("connection_ref"):
         try:
             database_url = resolve_database_url(cred["connection_ref"])
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"⚠️  Error resolviendo database_url para connection_ref={cred['connection_ref']}: {e}")
 
     return TenantContext(
         tenant_id=tenant_id,
