@@ -35,8 +35,11 @@ COPY . .
 # Puerto (Railway asigna PORT dinámico)
 EXPOSE 8000
 
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+# Variables de entorno para tenants multi-BD (configurar en Railway, NO en código)
+# ENV APP_CROMOS_DATABASE_URL debe configurarse como variable de servicio
+
+# Healthcheck (start-period alto porque PyTorch tarda en cargar)
+HEALTHCHECK --interval=30s --timeout=15s --retries=5 --start-period=120s \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:${PORT:-8000}/health')" || exit 1
 
 # Arrancar

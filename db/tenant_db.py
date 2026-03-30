@@ -213,10 +213,14 @@ def resolve_database_url(connection_ref: str) -> str:
     Resuelve la URL real de BD desde la referencia segura.
     Formatos soportados:
       - env:VARIABLE_NAME  → lee os.environ[VARIABLE_NAME]
+      - direct:URL         → devuelve la URL directamente (para tenants sin env var)
       - vault:SECRET_NAME  → (futuro) lee desde secret manager
     """
     if not connection_ref:
         raise ValueError("connection_ref vacío")
+
+    if connection_ref.startswith("direct:"):
+        return connection_ref[7:]
 
     if connection_ref.startswith("env:"):
         var_name = connection_ref[4:]
